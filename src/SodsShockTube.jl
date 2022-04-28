@@ -120,7 +120,7 @@ module SodsShockTube
 			recalculate_F!(F, u, ρ, e, p)
 
 			# solve using the chosen method
-			solver_step!(method, q, F, dt, h)
+			solver_step!(method, q, F, dt, h, u, ρ, E, e, p, gamma)
 
 			recalculate_variables!(q, u, ρ, E, e, p, gamma)
 			
@@ -134,8 +134,8 @@ module SodsShockTube
 	struct LaxFriedrichs end
 
 	struct LaxWendroff{T}
-		q_star::Vector{T}
-		F_star::Vector{T}
+		q_star::Matrix{T}
+		F_star::Matrix{T}
 	end
 
 	struct LaxWendroffViscousFluxes{T}
@@ -166,7 +166,20 @@ module SodsShockTube
 		end
 	end
 
-	function solver_step!(method::LaxWendroff, q::Vector{T}, F::Vector{T}, dt::T, h::T) where T <: AbstractFloat
+	function solver_step!(
+		method::LaxWendroff, 
+		q::Matrix{T}, 
+		F::Matrix{T}, 
+		dt::T, 
+		h::T,
+		u::Vector{T},
+		ρ::Vector{T},
+		E::Vector{T},
+		e::Vector{T},
+		p::Vector{T},
+		gamma::T
+	) where T <: AbstractFloat
+		n = size(q)[2]
 
 		# first, calculate q_star
 		for j = 2:n-1
@@ -178,8 +191,8 @@ module SodsShockTube
 		end
 
 		# then calculate the F* that comes from that q*
-		update_quantities!(q, u, ρ, E, e, p)
-		recalculate_F!(method.F_star, u, ρ, E, e, p)
+		recalculate_variables!(q, u, ρ, E, e, p, gamma)
+		recalculate_F!(method.F_star, u, ρ, e, p)
 
 		for j = 2:n-1
 			for v = 1:3
@@ -188,7 +201,6 @@ module SodsShockTube
 				q[v, j] = left - right
 			end
 		end
-
 
 		# # since we need j+1 we can only go to n-1
 		# qstar[1:3, 1:n-1] = todo
@@ -244,9 +256,8 @@ module SodsShockTube
 		# TODO: can probably just use E to calculate this here
 		F[3, :] = u .* (ρ .* (e .+ (1/2) .* u.^2) .+ p)
 	end
-
-
 end # module
 
 using .SodsShockTube
-main(LaxFriedrichsMarker())
+#main(LaxFriedrichsMarker())
+main(LaxWendroffMarker())
