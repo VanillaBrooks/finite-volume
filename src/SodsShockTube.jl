@@ -1,7 +1,16 @@
 module SodsShockTube
 	export main
+	export LaxFriedrichsMarker, LaxWendroffMarker, LaxWendroffViscousFluxes
 
-	function main()
+	abstract type MethodMarker end
+
+	struct LaxFriedrichsMarker <: MethodMarker end
+
+	struct LaxWendroffMarker <: MethodMarker end
+
+	struct LaxWendroffViscousFluxesMarker <: MethodMarker end
+
+	function main(solver_method_marker::M) where M <: MethodMarker
 		#
 		# parameters
 		#
@@ -93,7 +102,7 @@ module SodsShockTube
 		c[half_n:n] .= cR
 
 		# set the method we are using
-		method = LaxFriedrichs()
+		method = create_method(solver_method_marker, n)
 
 		umax = max(cL, cR, uL, uR)
 		dt = CFL * h / umax
@@ -132,7 +141,18 @@ module SodsShockTube
 	struct LaxWendroffViscousFluxes{T}
 	end
 
-	function solver_step!(method::LaxFriedrichs, q::Matrix{T}, F::Matrix{T}, dt::T, h::T) where T <: AbstractFloat
+	function create_method(marker::LaxFriedrichsMarker, n::Int)::LaxFriedrichs 
+		return LaxFriedrichs()
+	end
+
+	function create_method(marker::LaxWendroffMarker, n::Int)::LaxWendroff
+		q_star = zeros(3, n)
+		F_star = zeros(3, n)
+		return LaxWendroff(q_star, F_star)
+	end
+
+
+	function solver_step!(method::LaxFriedrichs, q::Matrix{T}, F::Matrix{T}, dt::T, h::T, _...) where T <: AbstractFloat
 		# TODO: Lax Freidrichs method
 		# according to the paper
 		n = size(q)[2]
@@ -229,4 +249,4 @@ module SodsShockTube
 end # module
 
 using .SodsShockTube
-main()
+main(LaxFriedrichsMarker())
