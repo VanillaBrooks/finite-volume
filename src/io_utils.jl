@@ -29,6 +29,9 @@ module IoUtils
 		p_dset::HDF5.Dataset
 		t_dset::HDF5.Dataset
 		ρ_dset::HDF5.Dataset
+		e_dset::HDF5.Dataset
+		c_dset::HDF5.Dataset
+		E_dset::HDF5.Dataset
 		stepper::Stepper
 		write_number::Int
 	end
@@ -43,6 +46,9 @@ module IoUtils
 		p_dset= create_dataset(flowfield_file_id, "pressure", datatype(T), dataspace(stepper.total_writes, n))
 		ρ_dset = create_dataset(flowfield_file_id, "rho", datatype(T), dataspace(stepper.total_writes, n))
 		t_dset = create_dataset(flowfield_file_id, "time", datatype(T), dataspace(stepper.total_writes, 1))
+		e_dset = create_dataset(flowfield_file_id, "entropy", datatype(T), dataspace(stepper.total_writes, n))
+		c_dset = create_dataset(flowfield_file_id, "mach", datatype(T), dataspace(stepper.total_writes, n))
+		E_dset = create_dataset(flowfield_file_id, "energy", datatype(T), dataspace(stepper.total_writes, n))
 		
 		return FlowfieldWriter(
 			n,
@@ -51,6 +57,9 @@ module IoUtils
 			p_dset,
 			t_dset,
 			ρ_dset,
+			e_dset,
+			c_dset,
+			E_dset,
 			stepper,
 			1
 		)
@@ -62,7 +71,10 @@ module IoUtils
 		u::Vector{T}, 
 		p::Vector{T}, 
 		t::T,
-		ρ::Vector{T}
+		ρ::Vector{T},
+		e::Vector{T},
+		c::Vector{T},
+		E::Vector{T}
 	) where T <: AbstractFloat
 		# break early if we are not supposed to step now
 		if !should_step(writer.stepper, step)
@@ -75,6 +87,9 @@ module IoUtils
 		writer.p_dset[writer.write_number, :] = p
 		writer.t_dset[writer.write_number, 1] = t
 		writer.ρ_dset[writer.write_number, :] = ρ
+		writer.e_dset[writer.write_number, :] = e
+		writer.c_dset[writer.write_number, :] = c
+		writer.E_dset[writer.write_number, :] = E
 
 
 		writer.write_number += 1
