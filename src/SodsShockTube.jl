@@ -1,6 +1,9 @@
 module SodsShockTube
+	include("./io_utils.jl")
+
 	export main
 	export LaxFriedrichsMarker, LaxWendroffMarker, LaxWendroffViscousFluxes
+	using .IoUtils: Stepper, create_stepper, create_writer, write_flowfield, close_flowfield
 
 	abstract type MethodMarker end
 
@@ -44,7 +47,6 @@ module SodsShockTube
 		# TODO: experiement with this
 		CFL = 1.0
 		# 3.9 ms
-		t_end = 3.9 / 1000
 
 		#
 		# Initial conditions
@@ -104,15 +106,26 @@ module SodsShockTube
 		# set the method we are using
 		method = create_method(solver_method_marker, n)
 
+
 		umax = max(cL, cR, uL, uR)
 		dt = CFL * h / umax
 
-		t = 0
+		t = 0.0
+		step_number = 0
 		t_end = 3.9 / 1000
+		total_steps = Int(ceil(t_end / dt))
 
-		println("dt is ", dt)
+		# create something to write flowfields
+		stepper = create_stepper(1, total_steps)
+		writer = create_writer(stepper, uL, n)
 
-		while t <= t_end
+		println("dt is ", dt, " and total steps ", total_steps)
+
+		while step_number < total_steps
+			t = step_number * dt
+			step_number += 1
+			write_flowfield(writer, step_number, u, p, t, ρ)
+
 			# construct q vector according to paper
 			# row is the variable, the column is the 
 			# spatial values
@@ -126,6 +139,8 @@ module SodsShockTube
 			
 			t += dt
 		end
+
+		close_flowfield(writer)
 
 
 		# then, do the plotting below
@@ -259,5 +274,5 @@ module SodsShockTube
 end # module
 
 using .SodsShockTube
-#main(LaxFriedrichsMarker())
-main(LaxWendroffMarker())
+main(LaxFriedrichsMarker())
+#main(LaxWendroffMarker())
