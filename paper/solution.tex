@@ -1,0 +1,68 @@
+
+\documentclass{article}
+
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{soul}
+\usepackage{color}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{cancel}
+\usepackage{setspace}
+\usepackage{listings}
+
+%\definecolor{lightgrey}{rgba}{.824, .825, .825}
+\definecolor{lightgrey}{rgb}{.867, .894, .886}
+
+% no indentation
+\setlength{\parindent}{0cm}
+
+\lstdefinestyle{code}{
+    backgroundcolor=\color{lightgrey},
+    breaklines=true,
+    numbers=left,
+    basicstyle=\tiny,
+    tabsize=2,
+    language=Python
+}
+\lstset{style=code}
+
+\newcommand{\mathsym}[1]{{}}
+\newcommand{\unicode}[1]{{}}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+
+\newcommand{\eig}{\text{eig}}
+\newcommand{\abs}{\text{abs}}
+
+\geometry{a4paper, left=2cm, right=2cm, top=1cm, bottom=2cm}
+
+\title{}
+\author{Brooks Karlik}
+\date{\today}
+
+\newcommand{\rank}{\text{rank}}
+\setlength{\parindent}{0.0pt}
+
+
+\begin{document}
+
+\maketitle
+\newpage
+
+
+$$
+	F^*
+	= 
+	F^* 
+	- 
+	\alpha h^2 \rho* \abs
+	\left(
+		%du/du
+		\pd{u}{x}
+	\right)
+	\pd{u}{x}
+	\nu
+$$
+
+\end{document}
