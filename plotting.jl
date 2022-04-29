@@ -69,7 +69,7 @@ function create_plot_layout(idx::Int)
 	pressure_plt = create_lineplot(pressure[idx, :], pressure_title, "p [Pa]");
 	density_plt = create_lineplot(ρ[idx, :], "ρ", "ρ [kg/m³]");
 	mach_plt = create_lineplot(Ma[idx, :], "Mach Number", "Ma");
-	energy_plt = create_lineplot(energy[idx, :], "Energy", "E")
+	energy_plt = create_lineplot(ρ[idx, :] .* velocity[idx, :], "Mass Rate", "u⋅ρ [kg m / s²]")
 	
 	plot(
 		pressure_plt, entropy_plt, velocity_plt, mach_plt, density_plt, energy_plt,
@@ -91,7 +91,7 @@ begin
 		create_plot_layout(i)
 	end
 
-	gif(anim, fps=15)
+	gif(anim, fps=10)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001

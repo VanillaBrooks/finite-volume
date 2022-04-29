@@ -41,6 +41,8 @@ module StateContainers
 
 	mutable struct State{T}
 		gamma::T
+		alpha::T
+		h::T
 		ic::InitialConditions
 		u::Vector{T}
 		ρ::Vector{T}
@@ -50,7 +52,7 @@ module StateContainers
 		p::Vector{T}
 	end
 
-	function create_state(n::Int, h::T)::State{T} where T <: AbstractFloat
+	function create_state(n::Int, h::T, alpha::T)::State{T} where T <: AbstractFloat
 		gamma = 1.4
 
 		ic = create_ic(gamma)
@@ -85,6 +87,8 @@ module StateContainers
 
 		return State(
 			gamma,
+			alpha,
+			h,
 			ic,
 			u,
 			ρ,

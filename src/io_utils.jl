@@ -84,7 +84,7 @@ module IoUtils
 		writer.t_dset[writer.write_number, 1] = t
 		writer.ρ_dset[writer.write_number, :] = s.ρ
 		writer.e_dset[writer.write_number, :] = s.e
-		writer.c_dset[writer.write_number, :] = s.c ./ s.u
+		writer.c_dset[writer.write_number, :] = s.u ./ s.c
 		writer.E_dset[writer.write_number, :] = s.E
 
 		writer.write_number += 1
