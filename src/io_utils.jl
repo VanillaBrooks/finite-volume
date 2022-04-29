@@ -1,6 +1,7 @@
 module IoUtils
 	using HDF5
 	export Stepper, create_stepper, create_writer, write_flowfield, close_flowfield
+	using ..StateContainers: State
 
 	struct Stepper
 		io_steps::Int
@@ -68,13 +69,8 @@ module IoUtils
 	function write_flowfield(
 		writer::FlowfieldWriter, 
 		step:: Int, 
-		u::Vector{T}, 
-		p::Vector{T}, 
+		s::State{T},
 		t::T,
-		ρ::Vector{T},
-		e::Vector{T},
-		c::Vector{T},
-		E::Vector{T}
 	) where T <: AbstractFloat
 		# break early if we are not supposed to step now
 		if !should_step(writer.stepper, step)
@@ -83,14 +79,13 @@ module IoUtils
 
 		println("writing flowfield for step ", step, " with io steps as ", writer.stepper.io_steps, " and total writes ", writer.stepper.total_writes, "write number is ", writer.write_number)
 
-		writer.u_dset[writer.write_number, :] = u
-		writer.p_dset[writer.write_number, :] = p
+		writer.u_dset[writer.write_number, :] = s.u
+		writer.p_dset[writer.write_number, :] = s.p
 		writer.t_dset[writer.write_number, 1] = t
-		writer.ρ_dset[writer.write_number, :] = ρ
-		writer.e_dset[writer.write_number, :] = e
-		writer.c_dset[writer.write_number, :] = c
-		writer.E_dset[writer.write_number, :] = E
-
+		writer.ρ_dset[writer.write_number, :] = s.ρ
+		writer.e_dset[writer.write_number, :] = s.e
+		writer.c_dset[writer.write_number, :] = s.c ./ s.u
+		writer.E_dset[writer.write_number, :] = s.E
 
 		writer.write_number += 1
 	end
