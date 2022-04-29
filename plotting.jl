@@ -86,13 +86,13 @@ create_plot_layout(1)
 create_plot_layout(num_writes)
 
 # ╔═╡ 1daf7c63-f59c-4593-a93c-ec709473f148
-begin
-	local anim = @animate for i = 1:num_writes
-		create_plot_layout(i)
-	end
+# begin
+# 	local anim = @animate for i = 1:num_writes
+# 		create_plot_layout(i)
+# 	end
 
-	gif(anim, fps=10)
-end
+# 	gif(anim, fps=10)
+# end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """

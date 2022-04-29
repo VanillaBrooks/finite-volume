@@ -9,7 +9,7 @@ module Calculations
 		s.ρ .= q[1, :]
 		s.u .= q[2, :] ./ s.ρ
 		s.E .= q[3, :] ./ s.ρ
-		s.e .= s.E .- (1/2) .* s.u.^2
+		s.e .= s.E - ((1/2) .* s.u.^2)
 		s.p .= (s.gamma - 1) .* s.ρ .* s.e
 
 		check_state(s)
@@ -43,6 +43,7 @@ module Calculations
 
 		du_dx_buffer = copy(s.u)
 		forward_difference(s.u, du_dx_buffer)
+		error!("we should not be here, we should have errored on the function call above")
 
 		vec = zeros(3,n)
 		vec[2] .= 1
