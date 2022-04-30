@@ -77,8 +77,9 @@ module SodsShockTube
 
 			# update the state `s` according to `q` that was calculated
 			# in solver_step!()
+			#
+			# For Lax Wendroff II Method, this is where the crash occurs
 			recalculate_variables!(q, s)
-			println("finish calculating variables from q")
 		end
 
 		close_flowfield(writer)

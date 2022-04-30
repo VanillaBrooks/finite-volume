@@ -15,6 +15,9 @@ end
 # ╔═╡ b17d7905-062f-4c3b-9694-a14036bc5a91
 path = "/home/brooks/finite-volume/results"
 
+# ╔═╡ 214f6aad-f22a-4340-b806-7724fdae8441
+IS_RUST = false
+
 # ╔═╡ 985a39be-a0ba-4e64-8e6c-fc489caef9d2
 h5path = path * "/flowfield.h5"
 
@@ -22,12 +25,19 @@ h5path = path * "/flowfield.h5"
 h5_file = h5open(h5path)
 
 # ╔═╡ 20dfb1b4-f8bc-4077-a85d-625095762b53
-#num_writes, N = size(h5_file["velocity"])
-N, num_writes = size(h5_file["velocity"])
+if IS_RUST
+	N, num_writes = size(h5_file["velocity"])
+else
+	num_writes, N = size(h5_file["velocity"])
+end
 
 # ╔═╡ d945cf2a-c42c-4c85-a2c3-808d504a617d
 function fix_dims(A)
-	return permutedims(A, reverse(1:ndims(A)))
+	if IS_RUST
+		return permutedims(A, reverse(1:ndims(A)))
+	else
+		return A
+	end
 end
 
 # ╔═╡ aaf3e588-d3f4-4773-86c6-be1c72cc799b
@@ -43,7 +53,13 @@ entropy = fix_dims(read(h5_file["entropy"]))
 Ma = fix_dims(read(h5_file["mach"]))
 
 # ╔═╡ a173cb3a-d11a-4a3c-bd50-f6f6763cd705
-time  = fix_dims(read(h5_file["time"])[1, :] .* 1000)
+begin
+	if IS_RUST
+		time  = fix_dims(read(h5_file["time"])[1, :] .* 1000)
+	else
+		time  = fix_dims(read(h5_file["time"])[:, 1] .* 1000)
+	end
+end
 
 # ╔═╡ 6ff8ec3a-9fbf-4e1b-a68d-dce80caeb3da
 pressure = fix_dims(read(h5_file["pressure"]))
@@ -1004,6 +1020,7 @@ version = "0.9.1+5"
 # ╔═╡ Cell order:
 # ╠═5b3d5b36-c725-11ec-3f31-8d828e56629e
 # ╠═b17d7905-062f-4c3b-9694-a14036bc5a91
+# ╠═214f6aad-f22a-4340-b806-7724fdae8441
 # ╠═985a39be-a0ba-4e64-8e6c-fc489caef9d2
 # ╠═3acabfb8-6f31-45f4-a60a-c33bb332bf9b
 # ╠═20dfb1b4-f8bc-4077-a85d-625095762b53
