@@ -22,29 +22,34 @@ h5path = path * "/flowfield.h5"
 h5_file = h5open(h5path)
 
 # ╔═╡ 20dfb1b4-f8bc-4077-a85d-625095762b53
-num_writes, N = size(h5_file["velocity"])
+#num_writes, N = size(h5_file["velocity"])
+N, num_writes = size(h5_file["velocity"])
+
+# ╔═╡ d945cf2a-c42c-4c85-a2c3-808d504a617d
+function fix_dims(A)
+	return permutedims(A, reverse(1:ndims(A)))
+end
 
 # ╔═╡ aaf3e588-d3f4-4773-86c6-be1c72cc799b
-velocity = read(h5_file["velocity"])
+velocity = fix_dims(read(h5_file["velocity"]))
 
 # ╔═╡ 1caac95a-a45d-49ad-a061-f4f712e762bb
-entropy = read(h5_file["entropy"])
+entropy = fix_dims(read(h5_file["entropy"]))
 
 # ╔═╡ 2fc83471-e15e-4793-a7a6-98a79d7522d5
-ρ = read(h5_file["rho"])
-
+ρ = fix_dims(read(h5_file["rho"]))
 
 # ╔═╡ eb74cce5-96c9-4625-a52b-7a5addf70559
-Ma = read(h5_file["mach"])
+Ma = fix_dims(read(h5_file["mach"]))
 
 # ╔═╡ a173cb3a-d11a-4a3c-bd50-f6f6763cd705
-time  = read(h5_file["time"])[:, 1] .* 1000
+time  = fix_dims(read(h5_file["time"])[1, :] .* 1000)
 
 # ╔═╡ 6ff8ec3a-9fbf-4e1b-a68d-dce80caeb3da
-pressure = read(h5_file["pressure"])
+pressure = fix_dims(read(h5_file["pressure"]))
 
 # ╔═╡ 809777a8-086b-4189-8661-4c217e91ef26
-energy = read(h5_file["energy"])
+energy = fix_dims(read(h5_file["energy"]))
 
 # ╔═╡ 0ec4e453-c1c4-4456-a6de-0c4913ae599a
 point_range = LinRange(0, 10.0, N)
@@ -1002,6 +1007,7 @@ version = "0.9.1+5"
 # ╠═985a39be-a0ba-4e64-8e6c-fc489caef9d2
 # ╠═3acabfb8-6f31-45f4-a60a-c33bb332bf9b
 # ╠═20dfb1b4-f8bc-4077-a85d-625095762b53
+# ╠═d945cf2a-c42c-4c85-a2c3-808d504a617d
 # ╠═aaf3e588-d3f4-4773-86c6-be1c72cc799b
 # ╠═1caac95a-a45d-49ad-a061-f4f712e762bb
 # ╠═2fc83471-e15e-4793-a7a6-98a79d7522d5
