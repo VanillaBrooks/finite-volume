@@ -72,7 +72,7 @@ module SodsShockTube
 			# in the last time step
 			recalculate_F!(F, s)
 
-			# solve using the chosen method
+			# # solve using the chosen method
 			solver_step!(method, q, F, dt, h, s)
 
 			# update the state `s` according to `q` that was calculated
@@ -88,6 +88,6 @@ module SodsShockTube
 end # module
 
 using .SodsShockTube
-main(LaxFriedrichsMarker())
-#main(LaxWendroffMarker())
+#main(LaxFriedrichsMarker())
+main(LaxWendroffMarker())
 #main(LaxWendroffViscousFluxesMarker())

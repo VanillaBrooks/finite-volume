@@ -22,8 +22,8 @@
     backgroundcolor=\color{lightgrey},
     breaklines=true,
     numbers=left,
-    basicstyle=\tiny,
-    tabsize=2,
+	basicstyle=\small,
+    tabsize=4,
     language=Python
 }
 \lstset{style=code}
@@ -70,5 +70,49 @@ $$
 		u
 	\end{bmatrix}
 $$
+
+
+Take the following code for LF method with two identical methods of solving for $q$: one with slicing, and one with raw indexing.
+The output for the following code is in \ref{top}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{./figs/top.png}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{./figs/top_statement.png}
+	\label{top}
+	\caption{top statement only results}
+\end{figure}
+
+If we comment out the top statement and only run the bottom statement the results are in figure \ref{bottom}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{./figs/bottom.png}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{./figs/bottom_statement.png}
+	\caption{bottom statement only results}
+	\label{bottom}
+\end{figure}
+
+If we run both statements, the result is in figure \ref{both}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{./figs/both.png}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{./figs/both_statements.png}
+	\caption{both statements results}
+	\label{both}
+\end{figure}
 
 \end{document}
