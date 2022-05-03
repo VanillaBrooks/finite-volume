@@ -65,25 +65,25 @@ module StateContainers
 		c = zeros(n)
 
 		# the discontinuity should be exactly in the middle
-		half_n = Int(floor((n-1) / 2));
+		half_n = Int(floor((n+1) / 2));
 
 		ρ[1:half_n] .= ic.ρL;
-		ρ[half_n:n] .= ic.ρR;
+		ρ[half_n+1:n] .= ic.ρR;
 
 		p[1:half_n] .= ic.pL;
-		p[half_n:n] .= ic.pR;
+		p[half_n+1:n] .= ic.pR;
 
 		u[1:half_n] .= ic.uL;
-		u[half_n:n] .= ic.uR;
+		u[half_n+1:n] .= ic.uR;
 
 		e[1:half_n] .= ic.eL;
-		e[half_n:n] .= ic.eR;
+		e[half_n+1:n] .= ic.eR;
 
 		E[1:half_n] .= ic.eL + (1/2) .* ic.uL.^2;
-		E[half_n:n] .= ic.eR + (1/2) .* ic.uR.^2;
+		E[half_n+1:n] .= ic.eR + (1/2) .* ic.uR.^2;
 
 		c[1:half_n] .= ic.cL
-		c[half_n:n] .= ic.cR
+		c[half_n+1:n] .= ic.cR
 
 		return State(
 			gamma,

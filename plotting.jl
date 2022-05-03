@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.18.4
+# v0.19.3
 
 using Markdown
 using InteractiveUtils
@@ -13,22 +13,30 @@ begin
 end
 
 # ╔═╡ b17d7905-062f-4c3b-9694-a14036bc5a91
-path = "/home/brooks/finite-volume/results"
+path = "/home/brooks/finite-volume/results/"
 
 # ╔═╡ 214f6aad-f22a-4340-b806-7724fdae8441
 IS_RUST = false
 
-# ╔═╡ 985a39be-a0ba-4e64-8e6c-fc489caef9d2
-h5path = path * "/flowfield.h5"
+# ╔═╡ bbdd03d7-2a00-4fb4-9622-eb1b12ad2914
+struct Data
+	velocity::Matrix{Float64}
+	int_energy::Matrix{Float64}
+	ρ::Matrix{Float64}
+	Ma::Matrix{Float64}
+	p::Matrix{Float64}
+	E::Matrix{Float64}
+	time::Vector{Float64}
+end
 
-# ╔═╡ 3acabfb8-6f31-45f4-a60a-c33bb332bf9b
-h5_file = h5open(h5path)
-
-# ╔═╡ 20dfb1b4-f8bc-4077-a85d-625095762b53
-if IS_RUST
-	N, num_writes = size(h5_file["velocity"])
-else
-	num_writes, N = size(h5_file["velocity"])
+# ╔═╡ 55777b9d-8cf6-47fc-9ae1-8e2ae0c8aae5
+struct Axes
+	velocity
+	int_energy
+	ρ
+	Ma
+	p
+	mass_flow
 end
 
 # ╔═╡ d945cf2a-c42c-4c85-a2c3-808d504a617d
@@ -40,80 +48,165 @@ function fix_dims(A)
 	end
 end
 
-# ╔═╡ aaf3e588-d3f4-4773-86c6-be1c72cc799b
-velocity = fix_dims(read(h5_file["velocity"]))
+# ╔═╡ b8576ca2-c9c6-4702-9d6c-3f9d47e190e0
+function load_data_for_path(name::String)::Data
+	h5path = path * name
+	h5_file = h5open(h5path)
+	
+	velocity = fix_dims(read(h5_file["velocity"]))
+	int_energy = fix_dims(read(h5_file["entropy"]))
+	ρ = fix_dims(read(h5_file["rho"]))
+	Ma = fix_dims(read(h5_file["mach"]))
+	pressure = fix_dims(read(h5_file["pressure"]))
+	energy = fix_dims(read(h5_file["energy"]))
+	time  = fix_dims(read(h5_file["time"])[:, 1] .* 1000)
 
-# ╔═╡ 1caac95a-a45d-49ad-a061-f4f712e762bb
-entropy = fix_dims(read(h5_file["entropy"]))
-
-# ╔═╡ 2fc83471-e15e-4793-a7a6-98a79d7522d5
-ρ = fix_dims(read(h5_file["rho"]))
-
-# ╔═╡ eb74cce5-96c9-4625-a52b-7a5addf70559
-Ma = fix_dims(read(h5_file["mach"]))
-
-# ╔═╡ a173cb3a-d11a-4a3c-bd50-f6f6763cd705
-begin
-	if IS_RUST
-		time  = fix_dims(read(h5_file["time"])[1, :] .* 1000)
-	else
-		time  = fix_dims(read(h5_file["time"])[:, 1] .* 1000)
-	end
+	return Data(velocity, int_energy, ρ, Ma, pressure, energy, time)
 end
 
-# ╔═╡ 6ff8ec3a-9fbf-4e1b-a68d-dce80caeb3da
-pressure = fix_dims(read(h5_file["pressure"]))
-
-# ╔═╡ 809777a8-086b-4189-8661-4c217e91ef26
-energy = fix_dims(read(h5_file["energy"]))
-
-# ╔═╡ 0ec4e453-c1c4-4456-a6de-0c4913ae599a
-point_range = LinRange(0, 10.0, N)
+# ╔═╡ 20dfb1b4-f8bc-4077-a85d-625095762b53
+begin
+	local sample_data = load_data_for_path("flowfield.h5")
+	num_writes, N = size(sample_data.velocity)
+	point_range = LinRange(0, 10.0, N)
+end
 
 # ╔═╡ d53a9377-94de-4de6-9513-f61620f93779
-function create_lineplot(data::Vector{Float64}, title, ylabel)
+function create_lineplot(data::Vector{Float64}, title, ylabel, label)
+	N = length(data)
+	point_range = LinRange(0, 10.0, N)
+
 	plot(
 		point_range,
 		data,
 		title = title,
 		ylabel = ylabel,
 		xlabel = "location [m]",
-		legend=false
+		label = label,
+		legend=true
+	)
+end
+
+# ╔═╡ 84388be4-0366-4447-ae70-53627f9d09fe
+function create_lineplot(plt, data::Vector{Float64}, label)
+	N = length(data)
+	point_range = LinRange(0, 10.0, N)
+	
+	plot!(
+		plt,
+		point_range,
+		data,
+		label = label,
 	)
 end
 
 # ╔═╡ c02ebadd-d42c-4f9a-96ef-3271e3b3863f
-function create_plot_layout(idx::Int)
-	pressure_title = @sprintf "presssure at t = %.3f ms" time[idx]
-	entropy_plt = create_lineplot(entropy[idx, :], "e", "e [?]")
-	velocity_plt = create_lineplot(velocity[idx, :], "u", "u [m/s]");
-	pressure_plt = create_lineplot(pressure[idx, :], pressure_title, "p [Pa]");
-	density_plt = create_lineplot(ρ[idx, :], "ρ", "ρ [kg/m³]");
-	mach_plt = create_lineplot(Ma[idx, :], "Mach Number", "Ma");
-	energy_plt = create_lineplot(ρ[idx, :] .* velocity[idx, :], "Mass Rate", "u⋅ρ [kg m / s²]")
+function create_plot_layout(idx::Int, data::Data, label)::Axes
+	pressure_title = @sprintf "presssure at t = %.3f ms" data.time[idx]
 	
-	plot(
-		pressure_plt, entropy_plt, velocity_plt, mach_plt, density_plt, energy_plt,
+	int_energy_plt = create_lineplot(data.int_energy[idx, :], "Internal Energy", "e [J]", label)
+	velocity_plt = create_lineplot(data.velocity[idx, :], "u", "u [m/s]", label);
+	pressure_plt = create_lineplot(data.p[idx, :], pressure_title, "p [Pa]", label);
+	density_plt = create_lineplot(data.ρ[idx, :], "ρ", "ρ [kg/m³]", label);
+	mach_plt = create_lineplot(data.Ma[idx, :], "Mach Number", "Ma", label);
+	mass_flow_plt = create_lineplot(data.ρ[idx, :] .* data.velocity[idx, :], "Mass Rate", "u⋅ρ [kg m / s²]", label)
+
+	return Axes(velocity_plt, int_energy_plt, density_plt, mach_plt, pressure_plt, mass_flow_plt)
+end
+
+# ╔═╡ df2589b7-9e97-4697-b6fc-b2719f99f238
+function create_plot_layout(axes::Axes, idx::Int, data::Data, label::String)	
+	create_lineplot(axes.int_energy, data.int_energy[idx, :], label)
+	create_lineplot(axes.velocity, data.velocity[idx, :], label);
+	create_lineplot(axes.p, data.p[idx, :], label);
+	create_lineplot(axes.ρ, data.ρ[idx, :], label);
+	create_lineplot(axes.Ma, data.Ma[idx, :], label);
+	create_lineplot(axes.mass_flow, data.ρ[idx, :] .* data.velocity[idx, :], label)
+end
+
+# ╔═╡ a0c37e02-cfd0-4498-a81d-c46a892a526a
+function finalize_plot(axes::Axes)
+	plot!(
+		axes.p, axes.int_energy, axes.velocity, axes.Ma, axes.ρ, axes.mass_flow,
+		# pressure_plt, int_energy_plt, velocity_plt, mach_plt, density_plt, energy_plt,
 		layout = (2,3),
 		size = (1400,  800),
+		dpi=200,
 		margins = 5Plots.mm
 	)
 end
 
-# ╔═╡ 210f6a3f-db9f-4743-9999-4532f8c61089
-create_plot_layout(1)
+# ╔═╡ 14e87135-ae0b-4d03-9eaa-f23e4dd88c3f
+begin
+	local data = load_data_for_path("flowfield.h5")
+	local data2 = load_data_for_path("flowfield_lax_friedrichs_n_601.h5")
 
-# ╔═╡ bac16db5-787b-4f8b-b9dd-61db5f08e2b5
-create_plot_layout(num_writes)
+	local axes = create_plot_layout(2, data, "default")
+	create_plot_layout(axes, 2, data2, "LF")
+	finalize_plot(axes)
+end
 
-# ╔═╡ 1daf7c63-f59c-4593-a93c-ec709473f148
-# begin
-# 	local anim = @animate for i = 1:num_writes
-# 		create_plot_layout(i)
-# 	end
+# ╔═╡ 71ab479e-9148-4682-a45a-8424999697f7
+# create a plot comparing alpha values
 
-# 	gif(anim, fps=10)
-# end
+begin
+	local name_creator(alpha) = @sprintf "flowfield_lax_wendroff_fluxes_alpha_%2.2f.h5" alpha
+	local label_creator(alpha) = @sprintf "α = %1.2f" alpha
+
+	#alpha_values = [0.01, 0.0001, 0.2, .5, 1., 5.]
+	alpha_values = [0.0001, 0.01, 0.2, 0.5]
+
+	alpha1 = alpha_values[1]
+	local data_1 = load_data_for_path(name_creator(alpha1))
+	local axes = create_plot_layout(2, data_1, label_creator(alpha1))
+
+	for i in 2:length(alpha_values)
+		alpha = alpha_values[i]
+		println(alpha)
+		data = load_data_for_path(name_creator(alpha))
+
+		create_plot_layout(axes, 2, data, label_creator(alpha))
+	end
+
+	finalize_plot(axes)
+end
+
+# ╔═╡ 21fe1d10-6af3-41da-be00-2a8781c605b1
+begin	
+	local LF_data = load_data_for_path("flowfield_lax_friedrichs_n_601.h5")
+	local LW_II_data = load_data_for_path("flowfield_lax_wendroff.h5")
+	local LW_II_flux_data = load_data_for_path("flowfield_lax_wendroff_fluxes_alpha_0.01.h5")
+	
+	local axes = create_plot_layout(2, LF_data, "lF")
+
+	create_plot_layout(axes, 2, LW_II_data, "LW-II")
+	create_plot_layout(axes, 2, LW_II_flux_data, "LW-II w/ α=.0.10")
+
+
+	finalize_plot(axes)
+end
+
+# ╔═╡ d5b5a11b-de87-4da0-936a-457d5a37d59d
+begin
+	local n_name_creator(n) = @sprintf "flowfield_lax_friedrichs_n_%d.h5" n
+	local n_label_creator(n) = @sprintf "n = %d" n
+
+	n_values=  [101, 201, 401, 801]
+
+	n1  = n_values[1]
+	local data_1 = load_data_for_path(n_name_creator(n1))
+	local axes = create_plot_layout(2, data_1, n_label_creator(n1))
+
+	for i in 2:length(n_values)
+		n = n_values[i]
+		println(n)
+		data = load_data_for_path(n_name_creator(n))
+
+		create_plot_layout(axes, 2, data, n_label_creator(n))
+	end
+
+	finalize_plot(axes)
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1021,22 +1114,19 @@ version = "0.9.1+5"
 # ╠═5b3d5b36-c725-11ec-3f31-8d828e56629e
 # ╠═b17d7905-062f-4c3b-9694-a14036bc5a91
 # ╠═214f6aad-f22a-4340-b806-7724fdae8441
-# ╠═985a39be-a0ba-4e64-8e6c-fc489caef9d2
-# ╠═3acabfb8-6f31-45f4-a60a-c33bb332bf9b
+# ╠═bbdd03d7-2a00-4fb4-9622-eb1b12ad2914
+# ╠═55777b9d-8cf6-47fc-9ae1-8e2ae0c8aae5
+# ╠═b8576ca2-c9c6-4702-9d6c-3f9d47e190e0
 # ╠═20dfb1b4-f8bc-4077-a85d-625095762b53
 # ╠═d945cf2a-c42c-4c85-a2c3-808d504a617d
-# ╠═aaf3e588-d3f4-4773-86c6-be1c72cc799b
-# ╠═1caac95a-a45d-49ad-a061-f4f712e762bb
-# ╠═2fc83471-e15e-4793-a7a6-98a79d7522d5
-# ╠═eb74cce5-96c9-4625-a52b-7a5addf70559
-# ╠═a173cb3a-d11a-4a3c-bd50-f6f6763cd705
-# ╠═6ff8ec3a-9fbf-4e1b-a68d-dce80caeb3da
-# ╠═809777a8-086b-4189-8661-4c217e91ef26
-# ╠═0ec4e453-c1c4-4456-a6de-0c4913ae599a
 # ╠═d53a9377-94de-4de6-9513-f61620f93779
+# ╠═84388be4-0366-4447-ae70-53627f9d09fe
 # ╠═c02ebadd-d42c-4f9a-96ef-3271e3b3863f
-# ╠═210f6a3f-db9f-4743-9999-4532f8c61089
-# ╠═bac16db5-787b-4f8b-b9dd-61db5f08e2b5
-# ╠═1daf7c63-f59c-4593-a93c-ec709473f148
+# ╠═df2589b7-9e97-4697-b6fc-b2719f99f238
+# ╠═a0c37e02-cfd0-4498-a81d-c46a892a526a
+# ╠═14e87135-ae0b-4d03-9eaa-f23e4dd88c3f
+# ╠═71ab479e-9148-4682-a45a-8424999697f7
+# ╠═21fe1d10-6af3-41da-be00-2a8781c605b1
+# ╠═d5b5a11b-de87-4da0-936a-457d5a37d59d
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

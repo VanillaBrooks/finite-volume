@@ -4,7 +4,8 @@ module Calculations
 
 	function recalculate_variables!(
 		q::Matrix{T},
-		s::State{T},
+		s::State{T};
+		update_speed_of_sound::Bool=false
 	) where T <: AbstractFloat
 		s.ρ .= q[1, :]
 		s.u .= q[2, :] ./ s.ρ
@@ -12,9 +13,9 @@ module Calculations
 		s.e .= s.E - ((1/2) .* s.u.^2)
 		s.p .= (s.gamma - 1) .* s.ρ .* s.e
 
-		check_state(s)
-
-		s.c .= sqrt.(s.gamma .* s.p ./ s.ρ)
+		if update_speed_of_sound 
+			s.c .= sqrt.(s.gamma .* s.p ./ s.ρ)
+		end
 	end
 
 	function recalculate_q!(
@@ -39,19 +40,19 @@ module Calculations
 		F::Matrix{T}, 
 		s::State,
 	) where T <: AbstractFloat
-		n = size(s.u)[2]
+		n = length(s.u)
 
 		du_dx_buffer = copy(s.u)
-		forward_difference(s.u, du_dx_buffer)
-		error!("we should not be here, we should have errored on the function call above")
+		forward_difference!(s.u, du_dx_buffer, s.h)
 
 		vec = zeros(3,n)
-		vec[2] .= 1
-		vec[3] = s.u
+		vec[2, :] .= 1
+		vec[3, :] = s.u
 
-		term = s.alpha * s.h^2 .* s.rho .* abs(du_dx_buffer) .* du_dx_buffer .* vec 
+		term = s.alpha * s.h^2 .* s.ρ .* abs.(du_dx_buffer) .* du_dx_buffer .* transpose(vec[:, 1:n])
 
-		F -= term
+		F -= transpose(term)
+		return F
 	end
 
 	function forward_difference!(

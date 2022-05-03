@@ -18,6 +18,10 @@ module IoUtils
 		return Stepper(io_steps, total_writes)
 	end
 
+	function create_stepper_num_writes(io_steps::Int, total_writes::Int)::Stepper
+		return Stepper(io_steps, total_writes)
+	end
+
 	# check if we should write output now
 	function should_step(stepper::Stepper, step::Int)
 		return (step % stepper.io_steps == 0) || step == 1
@@ -37,8 +41,8 @@ module IoUtils
 		write_number::Int
 	end
 
-	function create_writer(stepper::Stepper, out::T, n::Int) where T <: AbstractFloat
-		filename = "./results/flowfield.h5"
+	function create_writer(stepper::Stepper, out::T, n::Int, name::String) where T <: AbstractFloat
+		filename = "./results/" * name
 		Base.Filesystem.rm(filename, force=true)
 
 		flowfield_file_id = h5open(filename, "w")
